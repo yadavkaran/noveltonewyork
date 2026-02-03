@@ -448,22 +448,22 @@
         });
 
         function checkMessageProgress() {
-            if (interactionCount > 50 && messageIndex === 0) {
+            if (interactionCount > 120 && messageIndex === 0) {
                 showMessage('message1');
                 messageIndex = 1;
-            } else if (interactionCount > 150 && messageIndex === 1) {
+            } else if (interactionCount > 250 && messageIndex === 1) {
                 showMessage('message2');
                 messageIndex = 2;
-            } else if (interactionCount > 250 && messageIndex === 2) {
+            } else if (interactionCount > 400 && messageIndex === 2) {
                 showMessage('message3');
                 messageIndex = 3;
-            } else if (interactionCount > 350 && messageIndex === 3) {
+            } else if (interactionCount > 600 && messageIndex === 3) {
                 showMessage('message4');
                 messageIndex = 4;
-            } else if (interactionCount > 450 && messageIndex === 4) {
+            } else if (interactionCount > 800 && messageIndex === 4) {
                 showMessage('message5');
                 messageIndex = 5;
-            } else if (interactionCount > 550 && messageIndex === 5) {
+            } else if (interactionCount > 1000 && messageIndex === 5) {
                 showMessage('message6');
                 messageIndex = 6;
                 setTimeout(() => {
@@ -606,4 +606,5 @@
         }
     </script>
 </body>
+
 </html>
