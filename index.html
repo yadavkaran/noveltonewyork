@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Will You Be My Valentine? 💕</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0a0a;
+            min-height: 100vh;
+            overflow-x: hidden;
+            overflow-y: auto;
+            cursor: none;
+            position: relative;
+        }
+
+        #canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .content {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            text-align: center;
+            padding: 4rem 2rem;
+            width: 100%;
+        }
+
+        .message {
+            color: white;
+            font-size: 3rem;
+            text-shadow: 0 0 20px rgba(255, 105, 180, 0.8),
+                         0 0 40px rgba(255, 20, 147, 0.6),
+                         0 0 60px rgba(255, 105, 180, 0.4);
+            margin: 2rem 0;
+            opacity: 0;
+            transform: translateY(30px) scale(0.8);
+            transition: all 1s ease;
+            pointer-events: none;
+            font-weight: bold;
+        }
+
+        .message.show {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        .question-container {
+            margin-top: 3rem;
+            opacity: 0;
+            transform: scale(0.5);
+            transition: all 1s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        .question-container.show {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .question {
+            font-size: 4rem;
+            color: white;
+            text-shadow: 0 0 30px rgba(255, 105, 180, 1),
+                         0 0 60px rgba(255, 20, 147, 0.8),
+                         0 0 90px rgba(255, 105, 180, 0.6);
+            margin-bottom: 3rem;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from {
+                text-shadow: 0 0 30px rgba(255, 105, 180, 1),
+                             0 0 60px rgba(255, 20, 147, 0.8),
+                             0 0 90px rgba(255, 105, 180, 0.6);
+            }
+            to {
+                text-shadow: 0 0 40px rgba(255, 105, 180, 1),
+                             0 0 80px rgba(255, 20, 147, 1),
+                             0 0 120px rgba(255, 105, 180, 0.8),
+                             0 0 160px rgba(255, 20, 147, 0.6);
+            }
+        }
+
+        .buttons {
+            display: flex;
+            gap: 3rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 1.5rem 4rem;
+            font-size: 2rem;
+            border: 3px solid transparent;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn-yes {
+            background: linear-gradient(135deg, #ff6b9d, #c44569);
+            color: white;
+            box-shadow: 0 0 30px rgba(255, 107, 157, 0.6),
+                        0 0 60px rgba(196, 69, 105, 0.4);
+        }
+
+        .btn-yes:hover {
+            transform: scale(1.15);
+            box-shadow: 0 0 50px rgba(255, 107, 157, 1),
+                        0 0 100px rgba(196, 69, 105, 0.8);
+        }
+
+        .btn-no {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            box-shadow: 0 0 30px rgba(102, 126, 234, 0.6),
+                        0 0 60px rgba(118, 75, 162, 0.4);
+        }
+
+        .btn-no:hover {
+            transform: translate(calc(var(--random-x, 0) * 1px), calc(var(--random-y, 0) * 1px)) scale(1.1);
+        }
+
+        .interaction-hint {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 1.2rem;
+            z-index: 100;
+            pointer-events: none;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; }
+        }
+
+        .celebration-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .celebration-screen.show {
+            display: flex;
+        }
+
+        .celebration-text {
+            font-size: 5rem;
+            color: white;
+            text-shadow: 0 0 40px rgba(255, 105, 180, 1),
+                         0 0 80px rgba(255, 20, 147, 1),
+                         0 0 120px rgba(255, 105, 180, 0.8);
+            animation: bounce 1s ease-in-out infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-20px) scale(1.1); }
+        }
+
+        .celebration-image {
+            max-width: 500px;
+            max-height: 400px;
+            width: auto;
+            height: auto;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5),
+                        0 0 40px rgba(255, 105, 180, 0.3);
+            margin: 2rem 0;
+            opacity: 0;
+            transform: scale(0.8);
+            animation: imageFadeIn 1s ease-out 0.5s forwards;
+            object-fit: contain;
+        }
+
+        @keyframes imageFadeIn {
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .custom-cursor {
+            position: fixed;
+            width: 30px;
+            height: 30px;
+            pointer-events: none;
+            z-index: 9999;
+            transform: translate(-50%, -50%);
+            font-size: 2rem;
+            transition: transform 0.1s ease;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    <div class="custom-cursor" id="cursor">💖</div>
+    
+    <div class="content">
+        <div class="message" id="message1">Move your mouse around... ✨</div>
+        <div class="message" id="message2">Click anywhere to create magic! 💫</div>
+        <div class="message" id="message3">3 saal ho gaye... 💕</div>
+        <div class="message" id="message4">Fir bhi puch hi letaa hu...... 💖</div>
+        <div class="message" id="message5">Chodh nahe puchtaaaa...... 😅</div>
+        <div class="message" id="message6">Chodh Ro degi 😂</div>
+        
+        <div class="question-container" id="questionContainer">
+            <div class="question">Veedhi will you be my valentine? 💖</div>
+            <div class="buttons" id="buttonsContainer">
+                <button class="btn btn-yes" id="yesBtn">YES! 💕</button>
+                <button class="btn btn-no" id="noBtn">NO</button>
+            </div>
+            <div class="buttons" id="thinkButtonsContainer" style="display: none;">
+                <button class="btn btn-yes" id="thinkBtn" style="text-transform: none;">Ache se soch le 🤔</button>
+            </div>
+            <div class="message" id="noMessage" style="display: none;">chal veedhi ko phone de 📞</div>
+            <div class="buttons" id="tryAgainContainer" style="display: none;">
+                <button class="btn btn-yes" id="tryAgainBtn" style="text-transform: none;">Try Again 🔄</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="interaction-hint" id="hint">Move your mouse and click! 🖱️✨</div>
+
+    <div class="celebration-screen" id="celebration">
+        <div class="celebration-text" style="font-size: 2.5rem;">Happy Valentine's Day TUTU!! 💖</div>
+        <img src="couple-photo.jpg" alt="Novel to New York" class="celebration-image" id="celebrationImage">
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        // Particles system
+        class Particle {
+            constructor(x, y, type = 'heart') {
+                this.x = x;
+                this.y = y;
+                this.type = type;
+                this.size = Math.random() * 15 + 10;
+                this.speedX = (Math.random() - 0.5) * 5;
+                this.speedY = (Math.random() - 0.5) * 5;
+                this.life = 1;
+                this.decay = Math.random() * 0.02 + 0.01;
+                this.rotation = Math.random() * Math.PI * 2;
+                this.rotationSpeed = (Math.random() - 0.5) * 0.2;
+                this.colors = [
+                    '#ff6b9d', '#c44569', '#ff1493', '#ff69b4',
+                    '#ff1493', '#ff69b4', '#ff6b9d', '#c44569'
+                ];
+                this.color = this.colors[Math.floor(Math.random() * this.colors.length)];
+            }
+
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                this.life -= this.decay;
+                this.rotation += this.rotationSpeed;
+                this.speedY += 0.1; // gravity
+                this.speedX *= 0.99; // friction
+            }
+
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.life;
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.rotation);
+                
+                if (this.type === 'heart') {
+                    this.drawHeart(0, 0, this.size);
+                } else {
+                    ctx.fillStyle = this.color;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, this.size / 2, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                
+                ctx.restore();
+            }
+
+            drawHeart(x, y, size) {
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                const topCurveHeight = size * 0.3;
+                ctx.moveTo(x, y + topCurveHeight);
+                // left curve
+                ctx.bezierCurveTo(
+                    x, y,
+                    x - size / 2, y,
+                    x - size / 2, y + topCurveHeight
+                );
+                // bottom left
+                ctx.bezierCurveTo(
+                    x - size / 2, y + (size + topCurveHeight) / 2,
+                    x, y + (size + topCurveHeight) / 2,
+                    x, y + size
+                );
+                // bottom right
+                ctx.bezierCurveTo(
+                    x, y + (size + topCurveHeight) / 2,
+                    x + size / 2, y + (size + topCurveHeight) / 2,
+                    x + size / 2, y + topCurveHeight
+                );
+                // right curve
+                ctx.bezierCurveTo(
+                    x + size / 2, y,
+                    x, y,
+                    x, y + topCurveHeight
+                );
+                ctx.fill();
+            }
+        }
+
+        // Trailing hearts that follow mouse
+        class TrailParticle {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.size = Math.random() * 8 + 5;
+                this.life = 1;
+                this.decay = 0.05;
+            }
+
+            update() {
+                this.life -= this.decay;
+            }
+
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.life;
+                ctx.fillStyle = '#ff6b9d';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        let particles = [];
+        let trailParticles = [];
+        let mouseX = canvas.width / 2;
+        let mouseY = canvas.height / 2;
+        let clickCount = 0;
+        let messageIndex = 0;
+        let interactionCount = 0;
+
+        // Custom cursor
+        const cursor = document.getElementById('cursor');
+        document.addEventListener('mousemove', (e) => {
+            cursor.style.left = e.clientX + 'px';
+            cursor.style.top = e.clientY + 'px';
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+            
+            // Create trail particles
+            if (Math.random() > 0.7) {
+                trailParticles.push(new TrailParticle(e.clientX, e.clientY));
+            }
+            
+            // Create following hearts occasionally
+            if (Math.random() > 0.9) {
+                particles.push(new Particle(
+                    e.clientX + (Math.random() - 0.5) * 50,
+                    e.clientY + (Math.random() - 0.5) * 50,
+                    'heart'
+                ));
+            }
+
+            interactionCount++;
+            checkMessageProgress();
+        });
+
+        // Click to create explosion
+        document.addEventListener('click', (e) => {
+            // Don't create explosion if clicking on buttons
+            if (e.target.tagName === 'BUTTON' || e.target.closest('.btn')) {
+                return;
+            }
+            
+            clickCount++;
+            const explosionCount = 30;
+            
+            for (let i = 0; i < explosionCount; i++) {
+                particles.push(new Particle(e.clientX, e.clientY, 'heart'));
+            }
+            
+            // Add some sparkles
+            for (let i = 0; i < 10; i++) {
+                particles.push(new Particle(e.clientX, e.clientY, 'sparkle'));
+            }
+
+            interactionCount += 5;
+            checkMessageProgress();
+        });
+
+        function checkMessageProgress() {
+            if (interactionCount > 50 && messageIndex === 0) {
+                showMessage('message1');
+                messageIndex = 1;
+            } else if (interactionCount > 150 && messageIndex === 1) {
+                showMessage('message2');
+                messageIndex = 2;
+            } else if (interactionCount > 250 && messageIndex === 2) {
+                showMessage('message3');
+                messageIndex = 3;
+            } else if (interactionCount > 350 && messageIndex === 3) {
+                showMessage('message4');
+                messageIndex = 4;
+            } else if (interactionCount > 450 && messageIndex === 4) {
+                showMessage('message5');
+                messageIndex = 5;
+            } else if (interactionCount > 550 && messageIndex === 5) {
+                showMessage('message6');
+                messageIndex = 6;
+                setTimeout(() => {
+                    document.getElementById('questionContainer').classList.add('show');
+                    document.getElementById('hint').style.display = 'none';
+                }, 2000);
+            }
+        }
+
+        function showMessage(id) {
+            const message = document.getElementById(id);
+            message.classList.add('show');
+        }
+
+        // Animation loop
+        function animate() {
+            ctx.fillStyle = 'rgba(10, 10, 10, 0.1)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Update and draw trail particles
+            trailParticles = trailParticles.filter(p => {
+                p.update();
+                p.draw();
+                return p.life > 0;
+            });
+
+            // Update and draw particles
+            particles = particles.filter(p => {
+                p.update();
+                p.draw();
+                return p.life > 0;
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        // Resize handler
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+        // Yes button - show "think carefully" button
+        document.getElementById('yesBtn').addEventListener('click', function(e) {
+            e.stopPropagation(); // Prevent document click handler from interfering
+            // Hide original buttons
+            document.getElementById('buttonsContainer').style.display = 'none';
+            // Show "think carefully" button
+            document.getElementById('thinkButtonsContainer').style.display = 'flex';
+            
+            // Create some particles
+            for (let i = 0; i < 50; i++) {
+                particles.push(new Particle(
+                    canvas.width / 2,
+                    canvas.height / 2,
+                    'heart'
+                ));
+            }
+        });
+
+        // Think button - proceed to celebration
+        document.getElementById('thinkBtn').addEventListener('click', function(e) {
+            e.stopPropagation(); // Prevent document click handler from interfering
+            // Create massive celebration
+            for (let i = 0; i < 200; i++) {
+                particles.push(new Particle(
+                    canvas.width / 2,
+                    canvas.height / 2,
+                    'heart'
+                ));
+            }
+            
+            setTimeout(() => {
+                document.getElementById('celebration').classList.add('show');
+                document.querySelector('.content').style.display = 'none';
+            }, 500);
+        });
+
+        // No button - show message
+        document.getElementById('noBtn').addEventListener('click', function(e) {
+            e.stopPropagation(); // Prevent document click handler from interfering
+            // Hide buttons
+            document.getElementById('buttonsContainer').style.display = 'none';
+            // Show message
+            const noMessage = document.getElementById('noMessage');
+            noMessage.style.display = 'block';
+            // Remove inline opacity to allow CSS class to work
+            noMessage.style.opacity = '';
+            setTimeout(() => {
+                noMessage.classList.add('show');
+                // Show Try Again button after message appears
+                setTimeout(() => {
+                    document.getElementById('tryAgainContainer').style.display = 'flex';
+                }, 1000);
+            }, 100);
+            
+            // Create some particles
+            const rect = this.getBoundingClientRect();
+            for (let i = 0; i < 30; i++) {
+                particles.push(new Particle(
+                    rect.left + rect.width / 2,
+                    rect.top + rect.height / 2,
+                    'heart'
+                ));
+            }
+        });
+
+        // Try Again button - reset to question
+        document.getElementById('tryAgainBtn').addEventListener('click', function(e) {
+            e.stopPropagation(); // Prevent document click handler from interfering
+            // Hide NO message and Try Again button
+            document.getElementById('noMessage').style.display = 'none';
+            document.getElementById('noMessage').classList.remove('show');
+            document.getElementById('tryAgainContainer').style.display = 'none';
+            // Show original buttons again
+            document.getElementById('buttonsContainer').style.display = 'flex';
+            // Hide think button if it was shown
+            document.getElementById('thinkButtonsContainer').style.display = 'none';
+            
+            // Create some particles
+            for (let i = 0; i < 30; i++) {
+                particles.push(new Particle(
+                    canvas.width / 2,
+                    canvas.height / 2,
+                    'heart'
+                ));
+            }
+        });
+
+        // Start animation
+        animate();
+
+        // Initial particles
+        for (let i = 0; i < 20; i++) {
+            particles.push(new Particle(
+                Math.random() * canvas.width,
+                Math.random() * canvas.height,
+                'heart'
+            ));
+        }
+    </script>
+</body>
+</html>
